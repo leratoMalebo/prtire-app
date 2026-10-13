@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>PR Tire Office</title><link rel="icon" href="/logo.jpg"><meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f4f5;--card:#fff;--tx:#18181b;--mu:#71717a;--bd:#e4e4e7;--red:#111;--gr:#16a34a;--am:#d97706;--bl:#2563eb}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px Georgia,'Times New Roman',serif}
+header{background:#fff;color:#111;border-bottom:4px solid #111;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header b{font-size:20px;letter-spacing:1px}header small{opacity:.9}
+nav{display:flex;gap:4px;padding:10px 14px 0;overflow-x:auto}
+nav button{border:0;background:none;color:var(--mu);padding:9px 14px;font:600 14px inherit;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--red);border-color:var(--red)}
+main{padding:14px;max-width:1100px;margin:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;margin-top:4px}.stat span{color:var(--mu);font-size:13px}
+label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px;font-weight:600}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
+button.b{background:var(--red);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:600 14px inherit;cursor:pointer;margin:4px 4px 0 0}
+button.b.s{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}button.b.g{background:var(--gr)}button.b.sm{padding:5px 9px;font-size:12px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--bd);vertical-align:top}th{color:var(--mu);font-size:12px}
+.pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;color:#fff;white-space:nowrap}
+.New{background:var(--bl)}.Quoted{background:var(--am)}.Confirmed{background:var(--gr)}.Done{background:#52525b}
+.qrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.qrs .card{text-align:center}.qrs svg{width:170px;height:170px;background:#fff;padding:8px;border-radius:8px}
+.mu{color:var(--mu)}h3{margin:0 0 6px}.hide{display:none}
+pre{white-space:pre-wrap;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd);font:13px inherit}
+</style></head><body>
+<header><img src="/logo.jpg" alt="PR Tire" style="height:64px"><div style="text-align:right"><b>Booking Desk</b><br><small>R<span id="pp"></span> per tyre</small></div></header>
+<nav id="nav"></nav><main id="m"></main>
+<script>
+var PRICE=350,NUMS=['0623297176','0765806749'],S=['New','Quoted','Confirmed','Done'],tab='Dashboard',filt='All',B=[];
+var snap={};
+async function load(){try{var r=await fetch('/api/bookings');if(!r.ok)return;B=await r.json();snap={};B.forEach(function(b){snap[b.id]=JSON.stringify(b)});if(tab=='Dashboard'||tab=='Customers')render()}catch(e){}}
+async function save(){try{for(var b of B){var j=JSON.stringify(b);if(snap[b.id]!==j){snap[b.id]=j;await fetch('/api/bookings/'+b.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:j})}}
+var ids=B.map(function(b){return String(b.id)});for(var k in snap){if(ids.indexOf(k)<0){delete snap[k];await fetch('/api/bookings/'+k,{method:'DELETE'})}}}catch(e){alert('Could not save - check your connection')}}
+function $(i){return document.getElementById(i)}
+function wa(n){n=String(n).replace(/\D/g,'');return n[0]=='0'?'27'+n.slice(1):n}
+function R(n){return 'R'+n.toLocaleString('en-ZA')}
+function tot(b){return b.qty*PRICE}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function msg(b,k){
+ if(b.type=='Fleet')return (k=='q'?'PR TIRE FLEET QUOTE ✅':'✅ FLEET BOOKING CONFIRMED')+'\n\nCompany: '+b.company+'\nVehicles/Tyres: '+b.vehicle+' / '+b.qty+' tyres\nSizes: '+b.size+'\nPrice: '+R(PRICE)+' per tyre\nTotal: '+R(tot(b))+'\n\n📍 '+b.loc+'\n📅 '+b.date+'\n⏰ '+b.time+(k=='q'?'\n\nPlease confirm YES to secure your booking.':'\n\nPlease have the vehicles available at the agreed time.\nThank you for choosing PR Tire.');
+ return (k=='q'?'PR TIRE BOOKING CONFIRMATION ✅\n\nTyre: '+b.size+'\nPrice: '+R(PRICE)+' per tyre\nQuantity: '+b.qty+'\nTotal: '+R(tot(b))+'\n\n📍 Location: '+b.loc+'\n📅 '+b.date+'\n⏰ '+b.time+'\n\nPlease confirm YES to secure your booking.':'✅ BOOKING CONFIRMED\n\nPR Tire Puncture Protection\n'+b.qty+' tyres × '+R(PRICE)+' = '+R(tot(b))+'\n\n📅 '+b.date+'\n⏰ '+b.time+'\n📍 '+b.loc+'\n\nPlease have the vehicle available at the agreed time.\nThank you for choosing PR Tire.');
+}
+function send(id,k){var b=B.find(function(x){return x.id==id});
+ if(k=='q'&&b.status=='New')b.status='Quoted';if(k=='c')b.status='Confirmed';save();
+ window.open('https://wa.me/'+wa(b.phone)+'?text='+encodeURIComponent(msg(b,k)),'_blank');render()}
+function setS(id,v){B.find(function(x){return x.id==id}).status=v;save();render()}
+function pay(id){var b=B.find(function(x){return x.id==id});b.paid=!b.paid;if(b.paid)b.status='Done';save();render()}
+function del(id){if(confirm('Delete this booking?')){B=B.filter(function(x){return x.id!=id});save();render()}}
+function parse(){var t=$('paste').value,L=t.split('\n').map(function(s){return s.trim()}).filter(Boolean),m;
+ L.forEach(function(l){
+  if(m=l.match(/\d{3}\/\d{2}\s?R\s?\d{2}/i))$('size').value=m[0].toUpperCase();
+  else if(m=l.match(/(\d+)\s*tyres?/i))$('qty').value=m[1];
+  else if(/sat|sun|mon|tue|wed|thu|fri|\d{1,2}\/\d{1,2}|tomorrow|today/i.test(l)&&/\d{1,2}[:h]\d{2}/.test(l)){var p=l.match(/\d{1,2}[:h]\d{2}/)[0];$('time').value=p.replace('h',':');$('date').value=l.replace(p,'').trim()}
+  else if(!$('vehicle').value)$('vehicle').value=l;else $('loc').value=l});}
+function add(){var g=function(i){return $(i).value.trim()};
+ if(!g('phone')||!g('qty')){alert('Phone and quantity are required.');return}
+ B.unshift({id:Date.now(),name:g('name'),phone:g('phone'),type:g('type'),company:g('company'),vehicle:g('vehicle'),size:g('size'),qty:+g('qty'),loc:g('loc'),date:g('date'),time:g('time'),status:'New',paid:false,created:new Date().toISOString().slice(0,10)});
+ save();tab='Dashboard';render()}
+function dash(){var open=B.filter(function(b){return b.status!='Done'}),conf=B.filter(function(b){return b.status=='Confirmed'}),paid=B.filter(function(b){return b.paid});
+ var rows=B.filter(function(b){return filt=='All'||b.status==filt});
+ return '<div class="grid"><div class="card stat"><span>New enquiries</span><b>'+B.filter(function(b){return b.status=='New'}).length+'</b></div><div class="card stat"><span>Awaiting YES</span><b>'+B.filter(function(b){return b.status=='Quoted'}).length+'</b></div><div class="card stat"><span>Confirmed jobs</span><b>'+conf.length+'</b></div><div class="card stat"><span>Tyres in pipeline</span><b>'+open.reduce(function(a,b){return a+b.qty},0)+'</b></div><div class="card stat"><span>Pipeline value</span><b>'+R(open.reduce(function(a,b){return a+tot(b)},0))+'</b></div><div class="card stat"><span>Revenue paid</span><b>'+R(paid.reduce(function(a,b){return a+tot(b)},0))+'</b></div></div>'+
+ '<div class="card"><select id="flt" onchange="filt=this.value;render()" style="width:auto;margin-bottom:8px">'+['All'].concat(S).map(function(s){return '<option'+(s==filt?' selected':'')+'>'+s+'</option>'}).join('')+'</select><div class="tw"><table><tr><th>Customer</th><th>Job</th><th>When / where</th><th>Total</th><th>Status</th><th>Actions</th></tr>'+
+ (rows.length?rows.map(function(b){return '<tr><td><b>'+esc(b.type=='Fleet'?b.company:b.name||b.phone)+'</b><br><span class="mu">'+esc(b.phone)+(b.type=='Fleet'?' · Fleet':'')+'</span></td><td>'+esc(b.vehicle)+'<br><span class="mu">'+esc(b.size)+' × '+b.qty+'</span></td><td>'+esc(b.date)+' '+esc(b.time)+'<br><span class="mu">'+esc(b.loc)+'</span></td><td><b>'+R(tot(b))+'</b><br><span class="mu">'+(b.paid?'Paid ✓':'Unpaid')+'</span></td><td><span class="pill '+b.status+'">'+b.status+'</span><br><select onchange="setS('+b.id+',this.value)" style="margin-top:4px;padding:3px">'+S.map(function(s){return '<option'+(s==b.status?' selected':'')+'>'+s+'</option>'}).join('')+'</select></td><td><button class="b sm" onclick="send('+b.id+',\'q\')">Send quote</button><button class="b sm g" onclick="send('+b.id+',\'c\')">Confirm</button><button class="b sm s" onclick="pay('+b.id+')">'+(b.paid?'Unpay':'Mark paid')+'</button><button class="b sm s" onclick="del('+b.id+')">✕</button></td></tr>'}).join(''):'<tr><td colspan="6" class="mu">No bookings yet. Use “New booking” to log a WhatsApp enquiry.</td></tr>')+'</table></div></div>'}
+function form(){return '<div class="card"><h3>Log a WhatsApp enquiry</h3><label>Paste the customer’s reply (optional, auto-fills below)</label><textarea id="paste" rows="5" placeholder="BMW 3 Series&#10;225/45 R18&#10;4 tyres&#10;Johannesburg&#10;Saturday 10:00"></textarea><button class="b s" onclick="parse()">Auto-fill from message</button><div class="f"><div><label>Type</label><select id="type" onchange="$(\'co\').classList.toggle(\'hide\',this.value!=\'Fleet\')"><option>Retail</option><option>Fleet</option></select></div><div><label>Customer name</label><input id="name"></div><div><label>WhatsApp number</label><input id="phone" placeholder="0821234567"></div><div id="co" class="hide"><label>Company</label><input id="company"></div><div><label>Vehicle (or no. of vehicles)</label><input id="vehicle"></div><div><label>Tyre size(s)</label><input id="size" placeholder="225/45 R18"></div><div><label>Number of tyres</label><input id="qty" type="number" min="1"></div><div><label>Location</label><input id="loc"></div><div><label>Preferred date</label><input id="date" placeholder="Saturday"></div><div><label>Preferred time</label><input id="time" placeholder="10:00"></div></div><button class="b" onclick="add()">Save booking</button></div>'}
+function cust(){var M={};B.forEach(function(b){var k=wa(b.phone),c=M[k]=M[k]||{n:b.type=='Fleet'?b.company:b.name,p:b.phone,j:0,t:0,l:b.created};c.j++;if(b.paid)c.t+=tot(b);if(b.created>c.l)c.l=b.created});
+ var a=Object.keys(M).map(function(k){return M[k]});
+ return '<div class="card"><h3>Customer records</h3><p class="mu">Built automatically from every booking, ready for follow-up.</p><div class="tw"><table><tr><th>Customer</th><th>Phone</th><th>Jobs</th><th>Spent</th><th>Last booking</th><th></th></tr>'+(a.length?a.map(function(c){return '<tr><td>'+esc(c.n||'—')+'</td><td>'+esc(c.p)+'</td><td>'+c.j+'</td><td>'+R(c.t)+'</td><td>'+c.l+'</td><td><a href="https://wa.me/'+wa(c.p)+'?text='+encodeURIComponent('Hi '+(c.n||'')+' 👋 PR Tire here. Time to check your puncture protection? Reply to book your next service.')+'" target="_blank" class="b sm" style="background:var(--gr);color:#fff;text-decoration:none;border-radius:8px;padding:5px 9px;font-size:12px">Follow up</a></td></tr>'}).join(''):'<tr><td colspan="6" class="mu">No customers yet.</td></tr>')+'</table></div></div>'}
+function qrs(){var T={r:'Hi PR Tire 👋\nI would like to book Puncture Protection.\n\n🚗 Vehicle:\n📏 Tyre size:\n🔢 Number of tyres:\n📍 Location:\n📅 Preferred date:\n⏰ Preferred time:',f:'Hi PR Tire 👋\n🚛 FLEET / TRAILER BOOKING\n\nCompany:\nNumber of vehicles:\nNumber of tyres:\nTyre sizes:\nLocation:\nPreferred service date:'},h='<p class="mu">Print these on flyers, vehicles, cards and signage. Each opens WhatsApp with the booking message pre-filled.</p><div class="qrs">';
+ try{var q0=qrcode(0,'M');q0.addData(location.origin+'/');q0.make();h+='<div class="card"><b>🌐 Online booking page</b><br><span class="mu">'+location.origin+'/</span><br>'+q0.createSvgTag(4)+'</div>'}catch(e){}
+ NUMS.forEach(function(n){['r','f'].forEach(function(k){var u='https://wa.me/'+wa(n)+'?text='+encodeURIComponent(T[k]),svg='';
+  try{var q=qrcode(0,'M');q.addData(u);q.make();svg=q.createSvgTag(4)}catch(e){svg='<p class="mu">QR library unavailable</p>'}
+  h+='<div class="card"><b>'+(k=='r'?'📱 Book Puncture Protection':'🚛 Fleet / Trailer')+'</b><br><span class="mu">'+n+'</span><br>'+svg+'<br><a href="'+u+'" target="_blank" class="mu">Test link</a></div>'})});
+ return h+'</div><div class="card" style="margin-top:12px"><b>Pre-filled message (retail)</b><pre>'+esc(T.r)+'</pre></div>'}
+function render(){$('pp').textContent=PRICE;
+ $('nav').innerHTML=['Dashboard','New booking','Customers','QR codes'].map(function(t){return '<button class="'+(t==tab?'on':'')+'" onclick="tab=this.textContent;render()">'+t+'</button>'}).join('');
+ $('m').innerHTML=tab=='Dashboard'?dash():tab=='New booking'?form():tab=='Customers'?cust():qrs()}
+render();load();setInterval(load,30000);
+</script></body></html>
